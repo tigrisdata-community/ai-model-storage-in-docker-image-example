@@ -1,6 +1,6 @@
 # AI model storage in docker images example
 
-AI models are big and downloading them at runtime can suck. What if you could just put them in your image in the first place? This example shows you how to do that with [your own Docker registry](https://www.tigrisdata.com/docs/apps/docker-registry/) on top of Tigris.
+AI models are big and downloading them at runtime can add latency to your cold start times. What if you could just bake them into your production images? This example shows you how to do that with [your own Docker registry](https://www.tigrisdata.com/docs/apps/docker-registry/) on top of Tigris.
 
 This example is built on top of [ComfyUI](https://www.comfy.org/). It generates placeholder avatar images in the style of [Gravatar](https://docs.gravatar.com/api/avatars/images/) and can be used as a drop-in replacement for Gravatar in your web applications.
 
@@ -43,11 +43,19 @@ docker push registry.domain.tld/apps/avatargen
 
 ## Deploying
 
-- Choose a deployment target with a GPU that has at least 16 Gi of vram
-- Create bucket for generated images
-- Create access keypair
-- Make sure your deployment environment has read access to your registry
-- Envvars for deployment
+This example needs at least 16 gigabytes of vram (video memory / framebuffer) to run. From my understanding, it can work on a GPU with as little as 12 gigabytes of vram, but it has only been tested on an AWS [`g4dn.xlarge`](https://instances.vantage.sh/aws/ec2/g4dn.xlarge) with a Tesla T4 (16 gigabytes of video memory). Choose a deployment target that gives you at least that much video memory. Here's what you'd need with a few common providers:
+
+| Cloud         | Instance type                       |
+| :------------ | :---------------------------------- |
+| AWS           | `g4dn.xlarge` or larger             |
+| Digital Ocean | `H100x1` or larger                  |
+| Runpod        | Tesla V100 or higher (n>=16GB vram) |
+
+All the generated avatar images are going to be stored in a bucket. [Create a private bucket](https://www.tigrisdata.com/docs/buckets/create-bucket/) (such as `tigris-example`) and [an access key](https://www.tigrisdata.com/docs/iam/create-access-key/) with Editor permissions on that bucket.
+
+Make sure your deployment environment has logged into your registry.
+
+Avatargen is configured with environment variables. Here are the environment variables that Avatargen reads from.
 
 | Name                    | Description                                              |
 | :---------------------- | :------------------------------------------------------- |
@@ -57,8 +65,7 @@ docker push registry.domain.tld/apps/avatargen
 | `AWS_REGION`            | Set this to `auto` for Tigris.                           |
 | `BUCKET_NAME`           | Where avatar images should be cached.                    |
 
-- Visit the url
-  - Screenshot the demo
+Launch it somehow, and then open up the URL in your favorite browser!
 
 When it's up, the demo should look like this:
 
