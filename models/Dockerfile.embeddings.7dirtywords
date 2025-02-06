@@ -1,0 +1,2 @@
+FROM scratch
+COPY embeddings/7dirtywords.pt /opt/comfyui/models/embeddings/7dirtywords.pt

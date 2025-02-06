@@ -1,0 +1,2 @@
+FROM scratch
+COPY loras/vaporwave.safetensors /opt/comfyui/models/loras/vaporwave.safetensors

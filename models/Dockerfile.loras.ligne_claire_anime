@@ -1,0 +1,2 @@
+FROM scratch
+COPY loras/ligne_claire_anime.safetensors /opt/comfyui/models/loras/ligne_claire_anime.safetensors

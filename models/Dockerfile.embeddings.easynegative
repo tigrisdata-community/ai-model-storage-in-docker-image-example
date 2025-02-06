@@ -1,0 +1,2 @@
+FROM scratch
+COPY embeddings/easynegative.safetensors /opt/comfyui/models/embeddings/easynegative.safetensors

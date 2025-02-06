@@ -1,0 +1,2 @@
+FROM scratch
+COPY loras/ReimuLORA-02.safetensors /opt/comfyui/models/loras/ReimuLORA-02.safetensors

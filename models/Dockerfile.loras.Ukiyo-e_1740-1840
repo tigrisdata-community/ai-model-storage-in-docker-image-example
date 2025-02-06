@@ -1,0 +1,2 @@
+FROM scratch
+COPY loras/Ukiyo-e_1740-1840.safetensors /opt/comfyui/models/loras/Ukiyo-e_1740-1840.safetensors

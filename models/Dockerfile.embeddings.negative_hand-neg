@@ -1,0 +1,2 @@
+FROM scratch
+COPY embeddings/negative_hand-neg.pt /opt/comfyui/models/embeddings/negative_hand-neg.pt

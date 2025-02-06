@@ -1,0 +1,2 @@
+FROM scratch
+COPY loras/pastelMixStylizedAnime_pastelMixLoraVersion.safetensors /opt/comfyui/models/loras/pastelMixStylizedAnime_pastelMixLoraVersion.safetensors

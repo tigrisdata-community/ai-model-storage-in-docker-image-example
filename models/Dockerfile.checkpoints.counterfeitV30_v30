@@ -1,0 +1,2 @@
+FROM scratch
+COPY checkpoints/counterfeitV30_v30.safetensors /opt/comfyui/models/checkpoints/counterfeitV30_v30.safetensors

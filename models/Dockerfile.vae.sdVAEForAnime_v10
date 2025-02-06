@@ -1,0 +1,2 @@
+FROM scratch
+COPY vae/sdVAEForAnime_v10.pt /opt/comfyui/models/vae/sdVAEForAnime_v10.pt
