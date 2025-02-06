@@ -20,7 +20,6 @@ RUN pip install Flask \
   && git clone https://github.com/Ttl/ComfyUi_NNLatentUpscale /opt/comfyui/custom_nodes/ComfyUi_NNLatentUpscale \
   && rm -rf /opt/comfyui/custom_nodes/ComfyUi_NNLatentUpscale/.git
 
-COPY avatargen.py .
-COPY startup.sh .
+COPY . .
 
 CMD ["/opt/comfyui/startup.sh"]

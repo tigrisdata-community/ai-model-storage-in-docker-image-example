@@ -4,11 +4,10 @@ import sys
 from typing import Sequence, Mapping, Any, Union
 import torch
 import boto3
-import random
-from flask import Flask, jsonify, request, redirect
+from flask import Flask, jsonify, request, redirect, render_template
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="./static")
 
 
 def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
@@ -135,7 +134,7 @@ from nodes import (
 )
 
 
-def generate_image(prompt: str, negative_prompt: str):
+def generate_image(prompt: str, negative_prompt: str, seed: int):
     import_custom_nodes()
     with torch.inference_mode():
         checkpointloadersimple = CheckpointLoaderSimple()
@@ -181,7 +180,7 @@ def generate_image(prompt: str, negative_prompt: str):
 
         ksampler = KSampler()
         ksampler_3 = ksampler.sample(
-            seed=random.randint(1, 2**64),
+            seed=seed,
             steps=26,
             cfg=6,
             sampler_name="dpmpp_2m",
@@ -199,14 +198,6 @@ def generate_image(prompt: str, negative_prompt: str):
             vae=get_value_at_index(vaeloader_12, 0),
         )
 
-        imagesharpen = NODE_CLASS_MAPPINGS["ImageSharpen"]()
-        imagesharpen_85 = imagesharpen.sharpen(
-            sharpen_radius=1,
-            sigma=1,
-            alpha=1,
-            image=get_value_at_index(vaedecode_47, 0),
-        )
-
         saveimages3 = NODE_CLASS_MAPPINGS["SaveImageS3"]()
 
         vaedecode_42 = vaedecode.decode(
@@ -219,17 +210,18 @@ def generate_image(prompt: str, negative_prompt: str):
         )
 
         return get_value_at_index(saveimages3_89, 0)
-    
+
+
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+    aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    endpoint_url=os.environ["AWS_ENDPOINT_URL_S3"],
+    region_name=os.environ.get("AWS_REGION", None),
+)
+
 
 def generate_presigned_url(bucket_name: str, object_name: str, expiration: int = 3600):
-    s3_client = boto3.client(
-        "s3",
-        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-        endpoint_url=os.environ["AWS_ENDPOINT_URL_S3"],
-        region_name=os.environ.get("AWS_REGION", None),
-    )
-
     try:
         response = s3_client.generate_presigned_url(
             "get_object",
@@ -383,8 +375,8 @@ def hallucinate_prompt(hash_str):
 
 
 @app.route("/", methods=["GET"])
-def read_root():
-    return jsonify({"Hello": "World"})
+def index():
+    return render_template("index.html")
 
 
 @app.route("/health-check", methods=["GET"])
@@ -394,8 +386,34 @@ def health_check():
 
 @app.route("/avatar/<hash_str>", methods=["GET"])
 def generate_from_hash(hash_str):
+    key = f"cache/{hash_str}"
+
+    try:
+        response = s3_client.get_object(
+            Bucket=os.getenv("BUCKET_NAME", "comfyui"),
+            Key=f"cache/{hash_str}",
+        )
+
+        key_name = response["Body"].read().decode("utf-8")
+
+        redirect_url = generate_presigned_url(
+            os.getenv("BUCKET_NAME", "comfyui"), key_name
+        )
+
+        return redirect(redirect_url, code=302)
+    except s3_client.exceptions.NoSuchKey:
+        print(f"Key {key} not found in cache, generating new image...")
+        pass
+
     prompt, seed = hallucinate_prompt(hash_str)
-    image_response = generate_image(prompt, "person in distance, worst quality, low quality, medium quality, deleted, lowres, comic, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, watermark, username, blurry")
+    image_response = generate_image(prompt, "person in distance, worst quality, low quality, medium quality, deleted, lowres, comic, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, watermark, username, blurry", seed)
+
+    s3_client.put_object(
+        Bucket=os.getenv("BUCKET_NAME", "comfyui"),
+        Key=key,
+        Body=image_response[0],
+    )
+    print(f"Saved image to cache with key: {key}")
 
     redirect_url = generate_presigned_url(
         os.getenv("BUCKET_NAME", "comfyui"), image_response[0]
