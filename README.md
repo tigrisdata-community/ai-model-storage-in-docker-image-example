@@ -49,3 +49,7 @@ DOCKER_REGISTRY=registry.domain.tld bash fetch-and-build.sh
 
 - Visit the url
   - Screenshot the demo
+
+When it's up, the demo should look like this:
+
+![A screenshot of "Avatargen" with a picture of a brown-haired anime woman in a futuristic hoodie](./img/example.png)
