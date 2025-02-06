@@ -28,15 +28,25 @@ DOCKER_REGISTRY=registry.domain.tld bash fetch-and-build.sh
 
 ### Building avatargen image
 
-- Sed on the dockerfile to point to registry.domain.tld
-- `docker build`
-- `docker push`
+Go into the `server` folder and run this command on the Dockerfile:
+
+```bash
+cat Dockerfile | sed 's$docker-auth-registry-dev.fly.dev$registry.domain.tld$g' > Dockerfile.run
+```
+
+Then build and push your image:
+
+```text
+docker build -t registry.domain.tld/apps/avatargen --file Dockerfile.run .
+docker push registry.domain.tld/apps/avatargen
+```
 
 ## Deploying
 
 - Choose a deployment target with a GPU that has at least 16 Gi of vram
 - Create bucket for generated images
 - Create access keypair
+- Make sure your deployment environment has read access to your registry
 - Envvars for deployment
 
 | Name                    | Description                                              |
@@ -53,3 +63,5 @@ DOCKER_REGISTRY=registry.domain.tld bash fetch-and-build.sh
 When it's up, the demo should look like this:
 
 ![A screenshot of "Avatargen" with a picture of a brown-haired anime woman in a futuristic hoodie](./img/example.png)
+
+Type words into the text box, wait a few seconds, and the computer will surprise you!
